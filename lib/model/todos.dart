@@ -20,8 +20,8 @@ class TodoList {
 
   List<Todo> get todosList => _todos;
 
-  Future<void> addTodo(String name, String todo) async {
-    await todos.add({'name': name, 'todo': todo, 'isActive': true});
+  Future<void> addTodo(String name, String todo, bool isActive) async {
+    await todos.add({'name': name, 'todo': todo, 'isActive': isActive});
   }
 
   Future<void> removeTodo(Todo todo) async {
@@ -43,8 +43,24 @@ class TodoList {
         .update({'isActive': todo.isActive}).catchError((error) {});
   }
 
-  List<Todo> get inactiveTodos =>
-      _todos.where((todo) => !todo.isActive).toList();
+  Stream<List<Todo>> getInactiveTodos() {
+    return todos
+        .where('isActive', isEqualTo: false)
+        .snapshots()
+        .map((snapshot) {
+      var fetchedTodos =
+          snapshot.docs.map((doc) => Todo.fromSnapshot(doc)).toList();
+      return fetchedTodos;
+    });
+  }
+
+  Future<void> deleteAllInactiveTodos() async {
+    await todos.where('isActive', isEqualTo: false).get().then((snapshot) {
+      for (DocumentSnapshot doc in snapshot.docs) {
+        doc.reference.delete();
+      }
+    });
+  }
 
   Future<void> updateName(Todo todo, String name) async {
     await todo.reference.update({'name': name});

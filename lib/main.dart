@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project_1/pages/home.dart';
 import 'package:flutter_project_1/pages/todos.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -16,7 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'TODO List',
-      home: const Home(),
+      home: const MyTodos(),
       routes: {
         '/todos': (context) => const MyTodos(),
       },
