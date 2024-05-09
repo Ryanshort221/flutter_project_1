@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Todo {
   final String name;
   final String todo;
+  final DateTime date;
+  final String priority;
   final DocumentReference reference;
   bool isActive;
 
@@ -10,6 +12,8 @@ class Todo {
       : name = snapshot['name'],
         todo = snapshot['todo'],
         reference = snapshot.reference,
+        date = (snapshot['date'] as Timestamp).toDate(),
+        priority = snapshot['priority'],
         isActive = snapshot['isActive'];
 }
 
@@ -20,8 +24,18 @@ class TodoList {
 
   List<Todo> get todosList => _todos;
 
-  Future<void> addTodo(String name, String todo, bool isActive) async {
-    await todos.add({'name': name, 'todo': todo, 'isActive': isActive});
+  get date => Timestamp.now();
+  
+
+  Future<void> addTodo(
+      String name, String todo, bool isActive, DateTime date, String priority) async {
+    await todos.add({
+      'name': name,
+      'todo': todo,
+      'isActive': isActive,
+      'date': Timestamp.fromDate(date),
+      'priority': priority,
+    });
   }
 
   Future<void> removeTodo(Todo todo) async {
@@ -30,10 +44,10 @@ class TodoList {
 
   Stream<List<Todo>> getTodos() {
     return todos.where('isActive', isEqualTo: true).snapshots().map((snapshot) {
-      _todos.clear(); // Clear existing todos
+      _todos.clear();
       var fetchedTodos =
           snapshot.docs.map((doc) => Todo.fromSnapshot(doc)).toList();
-      _todos.addAll(fetchedTodos); // Update todos list
+      _todos.addAll(fetchedTodos);
       return fetchedTodos;
     });
   }
@@ -64,5 +78,14 @@ class TodoList {
 
   Future<void> updateName(Todo todo, String name) async {
     await todo.reference.update({'name': name});
+  }
+
+  Future<void> updateTodo(
+      Todo todo, String newName, String newTodo, DateTime newDate) async {
+    await todo.reference.update({
+      'name': newName,
+      'todo': newTodo,
+      'date': Timestamp.fromDate(newDate),
+    });
   }
 }
