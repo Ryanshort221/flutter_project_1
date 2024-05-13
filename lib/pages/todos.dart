@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_project_1/model/todos.dart';
 
-// TODO add priority to the edit todo list
 // TODO update the edit/add form to look better maybe make them bigger and come from bottom and take up half the screen
+// TODO update the edit form so that the date works the same way as the add form data/time picker
+// TODO fix edit form to reflect the selection of priority is updating correcelty when submitted but not refelecting in ui
 
 class MyTodos extends StatefulWidget {
   const MyTodos({super.key});
@@ -80,8 +81,12 @@ class _MyTodosState extends State<MyTodos> {
         _deleteTodo(context, todo);
       },
       child: Card(
+        shadowColor: Colors.white,
+        surfaceTintColor: Colors.black,
+        elevation: 6,
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
         child: ListTile(
+          subtitleTextStyle: const TextStyle(color: Colors.black),
           title: Text(
             '${todo.name} - ${DateFormat('MM/dd').format(todo.date)} - ${DateFormat('hh:mm a').format(todo.date)}',
             style: const TextStyle(
@@ -101,7 +106,6 @@ class _MyTodosState extends State<MyTodos> {
                   content: Text(
                     todo.todo,
                     style: const TextStyle(color: Colors.black),
-                    overflow: TextOverflow.ellipsis,
                   ),
                   actions: <Widget>[
                     TextButton(
@@ -117,7 +121,7 @@ class _MyTodosState extends State<MyTodos> {
           },
           subtitle: Text(
             todo.todo,
-            style: const TextStyle(color: Colors.grey),
+            overflow: TextOverflow.ellipsis,
           ),
           leading: Checkbox(
             activeColor: todo.priority == 'High'
@@ -243,8 +247,10 @@ class _MyTodosState extends State<MyTodos> {
                     return Container(
                       margin: const EdgeInsets.all(20),
                       child: const Text('No inactive todos',
-                          style:
-                              TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w400)),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400)),
                     );
                   }
                 },
@@ -265,7 +271,9 @@ class _MyTodosState extends State<MyTodos> {
             backgroundColor: Colors.black,
             title: const Text('TODO List',
                 style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Cursive')),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Fantasy')),
             leading: Builder(builder: (BuildContext context) {
               return IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
@@ -284,132 +292,200 @@ class _MyTodosState extends State<MyTodos> {
 
   void _showAddDialog(BuildContext context) {
     String priority = 'Low';
-    showDialog(
+    showModalBottomSheet(
       context: context,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return AlertDialog(
-              title: const Text('Add Todo'),
-              content: SingleChildScrollView(
-                child: ListBody(
-                  children: <Widget>[
-                    TextField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Name',
-                        hintText: 'Enter your name',
-                      ),
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/background5.webp'),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  margin: const EdgeInsets.all(20),
+                  child: const Text(
+                    'Add Todo',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
-                    TextField(
-                      controller: _todoController,
-                      decoration: const InputDecoration(
-                        labelText: 'Todo',
-                        hintText: 'Enter your todo',
-                      ),
-                    ),
-                    TextField(
-                      controller: _dateController,
-                      decoration: const InputDecoration(
-                        labelText: 'Date',
-                      ),
-                      readOnly: true,
-                      onTap: () async {
-                        final DateTime? selectedDate = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(2000, 1, 1),
-                          lastDate: DateTime(2100, 12, 31),
-                        );
-
-                        if (selectedDate != null) {
-                          final TimeOfDay? selectedTime = await showTimePicker(
-                            context: context,
-                            initialTime: TimeOfDay.now(),
-                          );
-
-                          if (selectedTime != null) {
-                            final DateTime selectedDateTimeUtc = DateTime(
-                              selectedDate.year,
-                              selectedDate.month,
-                              selectedDate.day,
-                              selectedTime.hour,
-                              selectedTime.minute,
-                            ).toUtc();
-
-                            final DateFormat formatter =
-                                DateFormat('yyyy-MM-dd HH:mm');
-                            final String formatted =
-                                formatter.format(selectedDateTimeUtc);
-
-                            setState(() {
-                              _dateController.text = formatted;
-                            });
-                          }
-                        }
-                      },
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Priority'),
-                        DropdownButton<String>(
-                          value: priority,
-                          items: <String>['Low', 'Medium', 'High']
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: <Widget>[
+                        TextField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                              labelText: 'Name',
+                              hintText: 'Enter your name',
+                              labelStyle: TextStyle(color: Colors.black),
+                              hintStyle: TextStyle(color: Colors.black),
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.black),
+                              ),
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.green),
+                              )),
+                        ),
+                        TextField(
+                          controller: _todoController,
+                          decoration: const InputDecoration(
+                            labelText: 'Todo',
+                            hintText: 'Enter your todo',
+                            labelStyle: TextStyle(color: Colors.black),
+                            hintStyle: TextStyle(color: Colors.black),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.black),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.green),
+                            ),
+                          ),
+                        ),
+                        TextField(
+                          controller: _dateController,
+                          decoration: const InputDecoration(
+                            labelText: 'Date',
+                            labelStyle: TextStyle(color: Colors.black),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.black),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.green),
+                            ),
+                          ),
+                          readOnly: true,
+                          onTap: () async {
+                            final DateTime? selectedDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2000, 1, 1),
+                              lastDate: DateTime(2100, 12, 31),
                             );
-                          }).toList(),
-                          onChanged: (String? newValue) {
+
+                            if (selectedDate != null) {
+                              final TimeOfDay? selectedTime =
+                                  await showTimePicker(
+                                context: context,
+                                initialTime: TimeOfDay.now(),
+                              );
+
+                              if (selectedTime != null) {
+                                final DateTime selectedDateTimeUtc = DateTime(
+                                  selectedDate.year,
+                                  selectedDate.month,
+                                  selectedDate.day,
+                                  selectedTime.hour,
+                                  selectedTime.minute,
+                                );
+
+                                final DateFormat formatter =
+                                    DateFormat('yyyy-MM-dd HH:mm');
+                                final String formatted =
+                                    formatter.format(selectedDateTimeUtc);
+
+                                setState(() {
+                                  _dateController.text = formatted;
+                                });
+                              }
+                            }
+                          },
+                        ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Priority',
+                                style: TextStyle(color: Colors.black)),
+                            DropdownButton<String>(
+                              value: priority,
+                              items: <String>[
+                                'Low',
+                                'Medium',
+                                'High'
+                              ].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  priority = newValue!;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        SwitchListTile(
+                          title: const Text('Is Active'),
+                          activeColor: Colors.green,
+                          value: _isActive,
+                          onChanged: (bool value) {
                             setState(() {
-                              priority = newValue!;
+                              _isActive = value;
                             });
                           },
                         ),
                       ],
                     ),
-                    SwitchListTile(
-                      title: const Text('Is Active'),
-                      value: _isActive,
-                      onChanged: (bool value) {
-                        setState(() {
-                          _isActive = value;
-                        });
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        shadowColor: Colors.white,
+                      ),
+                      child: const Text('Add',
+                          style: TextStyle(color: Colors.white)),
+                      // use the style property to make look more professional
+                      onPressed: () {
+                        final String name = _nameController.text;
+                        final String todo = _todoController.text;
+                        final DateFormat formatter =
+                            DateFormat('yyyy-MM-dd HH:mm');
+                        final DateTime selectedDateTime =
+                            formatter.parse(_dateController.text);
+                        todoList.addTodo(
+                            name, todo, _isActive, selectedDateTime, priority);
+                        Navigator.of(context).pop();
+                        _nameController.clear();
+                        _todoController.clear();
+                        _dateController.clear();
+                        _isActive = true;
                       },
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        shadowColor: Colors.white,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Cancel',
+                          style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
-              ),
-              actions: <Widget>[
-                TextButton(
-                  child: const Text('Cancel'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-                TextButton(
-                  child: const Text('Add'),
-                  onPressed: () {
-                    final String name = _nameController.text;
-                    final String todo = _todoController.text;
-                    final DateFormat formatter = DateFormat('yyyy-MM-dd HH:mm');
-                    final DateTime selectedDateTime =
-                        formatter.parse(_dateController.text);
-                    todoList.addTodo(
-                        name, todo, _isActive, selectedDateTime, priority);
-                    Navigator.of(context).pop();
-                    _nameController.clear();
-                    _todoController.clear();
-                    _dateController.clear();
-                    _isActive = true;
-                  },
-                )
               ],
-            );
-          },
+            ),
+          ],
         );
       },
     );
@@ -450,92 +526,193 @@ class _MyTodosState extends State<MyTodos> {
     setState(() {});
   }
 
+  //change to bottom nav modal
   void _showEditDialog(BuildContext context, Todo todo) {
+    String priority = todo.priority;
     TextEditingController nameController =
         TextEditingController(text: todo.name);
     TextEditingController todoController =
         TextEditingController(text: todo.todo);
-    TextEditingController dateController =
-        TextEditingController(text: DateFormat('yyyy-MM-dd').format(todo.date));
-    showDialog(
+    TextEditingController dateController = TextEditingController(
+        text: DateFormat('yyyy-MM-dd HH:mm').format(todo.date));
+
+    showModalBottomSheet(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Todo'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-              ),
-              TextField(
-                controller: todoController,
-                decoration: const InputDecoration(labelText: 'Todo'),
-              ),
-              TextField(
-                controller: _dateController,
-                decoration: const InputDecoration(
-                  labelText: 'Date',
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/background6.webp',
+                  fit: BoxFit.cover,
                 ),
-                readOnly: true, // make it read-only
-                onTap: () async {
-                  final DateTime? selectedDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2000, 1, 1),
-                    lastDate: DateTime(2100, 12, 31),
-                  );
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.all(20),
+                        child: const Text(
+                          'Edit Todo',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      TextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Name',
+                          labelStyle: TextStyle(color: Colors.black),
+                          hintStyle: TextStyle(color: Colors.black),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.black),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.green),
+                          ),
+                        ),
+                      ),
+                      TextField(
+                        controller: todoController,
+                        decoration: const InputDecoration(
+                          labelText: 'Todo',
+                          labelStyle: TextStyle(color: Colors.black),
+                          hintStyle: TextStyle(color: Colors.black),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.black),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.green),
+                          ),
+                        ),
+                      ),
+                      TextField(
+                        controller: dateController,
+                        decoration: const InputDecoration(
+                          labelText: 'Date',
+                          labelStyle: TextStyle(color: Colors.black),
+                          hintStyle: TextStyle(color: Colors.black),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.black),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.green),
+                          ),
+                        ),
+                        readOnly: true,
+                        onTap: () async {
+                          final DateTime? selectedDate = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2000, 1, 1),
+                            lastDate: DateTime(2100, 12, 31),
+                          );
 
-                  if (selectedDate != null) {
-                    final TimeOfDay? selectedTime = await showTimePicker(
-                      context: context,
-                      initialTime: TimeOfDay.now(),
-                    );
+                          if (selectedDate != null) {
+                            final TimeOfDay? selectedTime =
+                                await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.now(),
+                            );
 
-                    if (selectedTime != null) {
-                      final DateTime selectedDateTime = DateTime(
-                        selectedDate.year,
-                        selectedDate.month,
-                        selectedDate.day,
-                        selectedTime.hour,
-                        selectedTime.minute,
-                      );
+                            if (selectedTime != null) {
+                              final DateTime selectedDateTimeUtc = DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                                selectedTime.hour,
+                                selectedTime.minute,
+                              );
 
-                      final DateFormat formatter =
-                          DateFormat('yyyy-MM-dd HH:mm');
-                      final String formatted =
-                          formatter.format(selectedDateTime);
+                              final DateFormat formatter =
+                                  DateFormat('yyyy-MM-dd HH:mm');
+                              final String formatted =
+                                  formatter.format(selectedDateTimeUtc);
 
-                      setState(() {
-                        _dateController.text = formatted;
-                      });
-                    }
-                  }
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Save'),
-              onPressed: () {
-                todoList.updateTodo(
-                  todo,
-                  nameController.text,
-                  todoController.text, // Pass the new todo text
-                  DateFormat('yyyy-MM-dd').parse(dateController.text),
-                );
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
+                              setState(() {
+                                dateController.text = formatted;
+                              });
+                            }
+                          }
+                        },
+                      ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Priority',
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          DropdownButton<String>(
+                            value: priority,
+                            items: <String>['Low', 'Medium', 'High']
+                                .map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(
+                                  value,
+                                  style: const TextStyle(color: Colors.black),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                priority = newValue!;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ElevatedButton(
+                            child: const Text(
+                              'Save',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                            onPressed: () {
+                              final DateFormat formatter =
+                                  DateFormat('yyyy-MM-dd HH:mm');
+                              final DateTime selectedDateTime =
+                                  formatter.parse(dateController.text);
+                              todoList.updateTodo(
+                                todo,
+                                nameController.text,
+                                todoController.text,
+                                selectedDateTime,
+                                priority,
+                              );
+                              Navigator.of(context).pop();
+                              nameController.clear();
+                              todoController.clear();
+                              dateController.clear();
+                            },
+                          ),
+                          ElevatedButton(
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

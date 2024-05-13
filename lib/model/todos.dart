@@ -81,11 +81,12 @@ class TodoList {
   }
 
   Future<void> updateTodo(
-      Todo todo, String newName, String newTodo, DateTime newDate) async {
+      Todo todo, String newName, String newTodo, DateTime newDate, String priority) async {
     await todo.reference.update({
       'name': newName,
       'todo': newTodo,
       'date': Timestamp.fromDate(newDate),
+      'priority': priority,
     });
   }
 }
