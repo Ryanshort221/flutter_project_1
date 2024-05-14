@@ -25,10 +25,9 @@ class TodoList {
   List<Todo> get todosList => _todos;
 
   get date => Timestamp.now();
-  
 
-  Future<void> addTodo(
-      String name, String todo, bool isActive, DateTime date, String priority) async {
+  Future<void> addTodo(String name, String todo, bool isActive, DateTime date,
+      String priority) async {
     await todos.add({
       'name': name,
       'todo': todo,
@@ -43,7 +42,11 @@ class TodoList {
   }
 
   Stream<List<Todo>> getTodos() {
-    return todos.where('isActive', isEqualTo: true).snapshots().map((snapshot) {
+    return todos
+        .where('isActive', isEqualTo: true)
+        .orderBy('date', descending: false)
+        .snapshots()
+        .map((snapshot) {
       _todos.clear();
       var fetchedTodos =
           snapshot.docs.map((doc) => Todo.fromSnapshot(doc)).toList();
@@ -80,8 +83,8 @@ class TodoList {
     await todo.reference.update({'name': name});
   }
 
-  Future<void> updateTodo(
-      Todo todo, String newName, String newTodo, DateTime newDate, String priority) async {
+  Future<void> updateTodo(Todo todo, String newName, String newTodo,
+      DateTime newDate, String priority) async {
     await todo.reference.update({
       'name': newName,
       'todo': newTodo,

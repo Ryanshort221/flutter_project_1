@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_project_1/model/todos.dart';
-
-// TODO update the edit/add form to look better maybe make them bigger and come from bottom and take up half the screen
-// TODO update the edit form so that the date works the same way as the add form data/time picker
-// TODO fix edit form to reflect the selection of priority is updating correcelty when submitted but not refelecting in ui
+import 'dart:async';
 
 class MyTodos extends StatefulWidget {
   const MyTodos({super.key});
@@ -19,11 +16,59 @@ class _MyTodosState extends State<MyTodos> {
   final TextEditingController _todoController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   bool _isActive = true;
+  // Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     todoList.getTodos();
+    // _startTimer();
+  }
+
+//   void _startTimer() {
+//     _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
+//       _checkTodos();
+//     });
+//   }
+
+// void _checkTodos() {
+//   todoList.getTodos().listen((todos) async {
+//     DateTime now = DateTime.now();
+//     for (var todo in todos) {
+//       int differenceInMinutes = todo.date.difference(now).inMinutes;
+//       if (differenceInMinutes >= 0 && differenceInMinutes < 5) {
+//         _showNotificationDialog(todo, differenceInMinutes);
+//       }
+//     }
+//   });
+// }
+
+//   void _showNotificationDialog(Todo todo, int differenceInMinutes) {
+//     showDialog(
+//       context: context,
+//       builder: (BuildContext context) {
+//         return AlertDialog(
+//           title: const Text('Todo Reminder'),
+//           content: Text(
+//             'Todo "${todo.name}" is due in $differenceInMinutes minutes',
+//           ),
+//           actions: <Widget>[
+//             TextButton(
+//               child: const Text('Close'),
+//               onPressed: () {
+//                 Navigator.of(context).pop();
+//               },
+//             ),
+//           ],
+//         );
+//       },
+//     );
+//   }
+
+  @override
+  void dispose() {
+    // _timer?.cancel();
+    super.dispose();
   }
 
   void _toggle(Todo todo) {
@@ -40,6 +85,7 @@ class _MyTodosState extends State<MyTodos> {
         final todo = todoList.todosList[index];
         return _buildListItem(context, todo);
       },
+      padding: const EdgeInsets.only(bottom: 80.0),
     );
   }
 
@@ -81,6 +127,7 @@ class _MyTodosState extends State<MyTodos> {
         _deleteTodo(context, todo);
       },
       child: Card(
+        color: Colors.grey[100],
         shadowColor: Colors.white,
         surfaceTintColor: Colors.black,
         elevation: 6,
@@ -99,7 +146,7 @@ class _MyTodosState extends State<MyTodos> {
               builder: (BuildContext context) {
                 return AlertDialog(
                   title: Text(
-                      '${todo.name} - ${DateFormat('MM/dd').format(todo.date)}',
+                      '${todo.name} - ${DateFormat('MM/dd').format(todo.date)} - ${DateFormat('hh:mm a').format(todo.date)}',
                       style: const TextStyle(
                         color: Colors.black,
                       )),
@@ -283,209 +330,223 @@ class _MyTodosState extends State<MyTodos> {
           ),
           body: _buildBody(),
           floatingActionButton: FloatingActionButton(
-            child: const Icon(Icons.add),
+            backgroundColor: Colors.transparent,
             onPressed: () => _showAddDialog(context),
+            shape: RoundedRectangleBorder(
+              side: const BorderSide(color: Colors.white, width: 2),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: const Icon(Icons.add, color: Colors.white),
           ),
           drawer: buildDrawer(context),
         ));
   }
 
+  String priority = 'Low';
   void _showAddDialog(BuildContext context) {
-    String priority = 'Low';
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) {
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/background5.webp'),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter modalSetState) {
+            return Stack(
+              fit: StackFit.expand,
               children: [
-                Container(
-                  margin: const EdgeInsets.all(20),
-                  child: const Text(
-                    'Add Todo',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/background5.webp'),
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: <Widget>[
-                        TextField(
-                          controller: _nameController,
-                          decoration: const InputDecoration(
-                              labelText: 'Name',
-                              hintText: 'Enter your name',
-                              labelStyle: TextStyle(color: Colors.black),
-                              hintStyle: TextStyle(color: Colors.black),
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.black),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.all(20),
+                      child: const Text(
+                        'Add Todo',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: <Widget>[
+                            TextField(
+                              controller: _nameController,
+                              decoration: const InputDecoration(
+                                  labelText: 'Name',
+                                  hintText: 'Enter your name',
+                                  labelStyle: TextStyle(color: Colors.black),
+                                  hintStyle: TextStyle(color: Colors.black),
+                                  enabledBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.black),
+                                  ),
+                                  focusedBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.green),
+                                  )),
+                            ),
+                            TextField(
+                              controller: _todoController,
+                              decoration: const InputDecoration(
+                                labelText: 'Todo',
+                                hintText: 'Enter your todo',
+                                labelStyle: TextStyle(color: Colors.black),
+                                hintStyle: TextStyle(color: Colors.black),
+                                enabledBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.black),
+                                ),
+                                focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.green),
+                                ),
                               ),
-                              focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.green),
-                              )),
-                        ),
-                        TextField(
-                          controller: _todoController,
-                          decoration: const InputDecoration(
-                            labelText: 'Todo',
-                            hintText: 'Enter your todo',
-                            labelStyle: TextStyle(color: Colors.black),
-                            hintStyle: TextStyle(color: Colors.black),
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.black),
                             ),
-                            focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.green),
-                            ),
-                          ),
-                        ),
-                        TextField(
-                          controller: _dateController,
-                          decoration: const InputDecoration(
-                            labelText: 'Date',
-                            labelStyle: TextStyle(color: Colors.black),
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.black),
-                            ),
-                            focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.green),
-                            ),
-                          ),
-                          readOnly: true,
-                          onTap: () async {
-                            final DateTime? selectedDate = await showDatePicker(
-                              context: context,
-                              initialDate: DateTime.now(),
-                              firstDate: DateTime(2000, 1, 1),
-                              lastDate: DateTime(2100, 12, 31),
-                            );
-
-                            if (selectedDate != null) {
-                              final TimeOfDay? selectedTime =
-                                  await showTimePicker(
-                                context: context,
-                                initialTime: TimeOfDay.now(),
-                              );
-
-                              if (selectedTime != null) {
-                                final DateTime selectedDateTimeUtc = DateTime(
-                                  selectedDate.year,
-                                  selectedDate.month,
-                                  selectedDate.day,
-                                  selectedTime.hour,
-                                  selectedTime.minute,
+                            TextField(
+                              controller: _dateController,
+                              decoration: const InputDecoration(
+                                labelText: 'Date',
+                                labelStyle: TextStyle(color: Colors.black),
+                                enabledBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.black),
+                                ),
+                                focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.green),
+                                ),
+                              ),
+                              readOnly: true,
+                              onTap: () async {
+                                final DateTime? selectedDate =
+                                    await showDatePicker(
+                                  context: context,
+                                  initialDate: DateTime.now(),
+                                  firstDate: DateTime(2000, 1, 1),
+                                  lastDate: DateTime(2100, 12, 31),
                                 );
 
-                                final DateFormat formatter =
-                                    DateFormat('yyyy-MM-dd HH:mm');
-                                final String formatted =
-                                    formatter.format(selectedDateTimeUtc);
+                                if (selectedDate != null) {
+                                  final TimeOfDay? selectedTime =
+                                      await showTimePicker(
+                                    context: context,
+                                    initialTime: TimeOfDay.now(),
+                                  );
 
-                                setState(() {
-                                  _dateController.text = formatted;
-                                });
-                              }
-                            }
-                          },
-                        ),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Priority',
-                                style: TextStyle(color: Colors.black)),
-                            DropdownButton<String>(
-                              value: priority,
-                              items: <String>[
-                                'Low',
-                                'Medium',
-                                'High'
-                              ].map<DropdownMenuItem<String>>((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                );
-                              }).toList(),
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  priority = newValue!;
+                                  if (selectedTime != null) {
+                                    final DateTime selectedDateTimeUtc =
+                                        DateTime(
+                                      selectedDate.year,
+                                      selectedDate.month,
+                                      selectedDate.day,
+                                      selectedTime.hour,
+                                      selectedTime.minute,
+                                    );
+
+                                    final DateFormat formatter =
+                                        DateFormat('yyyy-MM-dd HH:mm');
+                                    final String formatted =
+                                        formatter.format(selectedDateTimeUtc);
+
+                                    modalSetState(() {
+                                      _dateController.text = formatted;
+                                    });
+                                  }
+                                }
+                              },
+                            ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Priority',
+                                    style: TextStyle(color: Colors.black)),
+                                DropdownButton<String>(
+                                  value: priority,
+                                  items: <String>['Low', 'Medium', 'High']
+                                      .map<DropdownMenuItem<String>>(
+                                          (String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? newValue) {
+                                    modalSetState(() {
+                                      priority = newValue!;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                            SwitchListTile(
+                              title: const Text('Is Active'),
+                              activeColor: Colors.green,
+                              value: _isActive,
+                              onChanged: (bool value) {
+                                modalSetState(() {
+                                  _isActive = value;
                                 });
                               },
                             ),
                           ],
                         ),
-                        SwitchListTile(
-                          title: const Text('Is Active'),
-                          activeColor: Colors.green,
-                          value: _isActive,
-                          onChanged: (bool value) {
-                            setState(() {
-                              _isActive = value;
-                            });
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            shadowColor: Colors.white,
+                          ),
+                          child: const Text('Add',
+                              style: TextStyle(color: Colors.white)),
+                          onPressed: () {
+                            final String name = _nameController.text;
+                            final String todo = _todoController.text;
+                            final DateFormat formatter =
+                                DateFormat('yyyy-MM-dd HH:mm');
+                            final DateTime selectedDateTime =
+                                formatter.parse(_dateController.text);
+                            todoList.addTodo(name, todo, _isActive,
+                                selectedDateTime, priority);
+                            Navigator.of(context).pop();
+                            _nameController.clear();
+                            _todoController.clear();
+                            _dateController.clear();
+                            _isActive = true;
                           },
                         ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            shadowColor: Colors.white,
+                          ),
+                          onPressed: () {
+                            _nameController.clear();
+                            _todoController.clear();
+                            _dateController.clear();
+                            _isActive = true;
+                            priority = 'Low';
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('Cancel',
+                              style: TextStyle(color: Colors.white)),
+                        ),
                       ],
-                    ),
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        shadowColor: Colors.white,
-                      ),
-                      child: const Text('Add',
-                          style: TextStyle(color: Colors.white)),
-                      // use the style property to make look more professional
-                      onPressed: () {
-                        final String name = _nameController.text;
-                        final String todo = _todoController.text;
-                        final DateFormat formatter =
-                            DateFormat('yyyy-MM-dd HH:mm');
-                        final DateTime selectedDateTime =
-                            formatter.parse(_dateController.text);
-                        todoList.addTodo(
-                            name, todo, _isActive, selectedDateTime, priority);
-                        Navigator.of(context).pop();
-                        _nameController.clear();
-                        _todoController.clear();
-                        _dateController.clear();
-                        _isActive = true;
-                      },
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        shadowColor: Colors.white,
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('Cancel',
-                          style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
               ],
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -538,6 +599,7 @@ class _MyTodosState extends State<MyTodos> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
@@ -545,7 +607,7 @@ class _MyTodosState extends State<MyTodos> {
               fit: StackFit.expand,
               children: [
                 Image.asset(
-                  'assets/background6.webp',
+                  'assets/background7.webp',
                   fit: BoxFit.cover,
                 ),
                 Container(
@@ -671,12 +733,16 @@ class _MyTodosState extends State<MyTodos> {
                         ],
                       ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shadowColor: Colors.white,
+                            ),
                             child: const Text(
                               'Save',
-                              style: TextStyle(color: Colors.black),
+                              style: TextStyle(color: Colors.white),
                             ),
                             onPressed: () {
                               final DateFormat formatter =
@@ -697,9 +763,13 @@ class _MyTodosState extends State<MyTodos> {
                             },
                           ),
                           ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shadowColor: Colors.white,
+                            ),
                             child: const Text(
                               'Cancel',
-                              style: TextStyle(color: Colors.black),
+                              style: TextStyle(color: Colors.white),
                             ),
                             onPressed: () {
                               Navigator.of(context).pop();
